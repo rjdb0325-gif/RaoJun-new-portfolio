@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件下载 | 饶俊作品集</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .download-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+        }
+
+        .download-container {
+            max-width: 600px;
+            width: 100%;
+            background-color: var(--gray-color);
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .file-icon-large {
+            width: 100px;
+            height: 100px;
+            background-color: var(--primary-color);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+        }
+
+        .file-icon-large svg {
+            width: 60px;
+            height: 60px;
+        }
+
+        .download-container h1 {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .download-container .file-name {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .download-container .file-info {
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-bottom: 30px;
+        }
+
+        .download-btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-top: 20px;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            color: var(--secondary-color);
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error-state svg {
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .error-state h2 {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .error-state p {
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(78, 205, 196, 0.3);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-logo">
+                <h1>饶俊</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="index.html#projects" class="nav-link">作品</a>
+                <a href="index.html#about" class="nav-link">关于我</a>
+                <a href="index.html#contact" class="nav-link">联系</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="download-section">
+            <div class="download-container" id="downloadContainer">
+                <div class="loading-state" id="loadingState">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载文件...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 饶俊 - Product Manager</p>
+        </div>
+    </footer>
+
+    <script>
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileId = urlParams.get('id');
+
+        const downloadContainer = document.getElementById('downloadContainer');
+        const loadingState = document.getElementById('loadingState');
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 加载文件
+        function loadFile() {
+            if (!fileId) {
+                showError('无效的文件链接', '请检查链接是否正确');
+                return;
+            }
+
+            // 从本地存储获取文件
+            const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+            const file = uploadedFiles.find(f => f.id === fileId);
+
+            if (!file) {
+                showError('文件不存在', '该文件可能已被删除或链接已过期');
+                return;
+            }
+
+            // 显示文件信息
+            showFileInfo(file);
+        }
+
+        // 显示文件信息
+        function showFileInfo(file) {
+            loadingState.style.display = 'none';
+
+            downloadContainer.innerHTML = `
+                <div class="file-icon-large">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="white"/>
+                        <path d="M14 2V8H20" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M16 13H8" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M16 17H8" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M10 9H8" stroke="#4ECDC4" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h1>文件下载</h1>
+                <p class="file-name">${file.name}</p>
+                <p class="file-info">${formatFileSize(file.size)} · ${new Date(file.uploadTime).toLocaleDateString()}</p>
+                <button class="btn btn-primary download-btn" id="downloadBtn">
+                    立即下载
+                </button>
+                <br>
+                <a href="index.html" class="back-link">返回首页</a>
+            `;
+
+            // 绑定下载事件
+            document.getElementById('downloadBtn').addEventListener('click', () => {
+                downloadFile(file);
+            });
+        }
+
+        // 下载文件
+        function downloadFile(file) {
+            const link = document.createElement('a');
+            link.href = file.data;
+            link.download = file.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 显示错误
+        function showError(title, message) {
+            loadingState.style.display = 'none';
+
+            downloadContainer.innerHTML = `
+                <div class="error-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="#ff6b6b" stroke-width="2"/>
+                        <path d="M15 9L9 15" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M9 9L15 15" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <h2>${title}</h2>
+                    <p>${message}</p>
+                    <a href="index.html" class="btn btn-primary">返回首页</a>
+                </div>
+            `;
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', loadFile);
+    </script>
+</body>
+</html>
